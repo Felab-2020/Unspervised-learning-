@@ -1,0 +1,202 @@
+---
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+# Part 3: Association Rules
+
+```{R}
+# We first we install the required library 
+install.packages("dplyr")
+library(dplyr)
+install.packages("tidyverse")
+library(tidyverse)
+install.packages("ggplot2")
+library(ggplot2)
+install.packages("devtools",dependencies=TRUE)
+library(devtools) 
+install_github("vqv/ggbiplot") 
+library(ggbiplot)
+install.packages("arules") 
+library(arules)
+install.packages("arulesViz")
+library(arulesViz)
+install.packages("Rtsne")
+library(Rtsne)
+install.packages("caret")
+library(caret)
+install.packages("corrplot")
+library(corrplot)
+```
+
+
+```{r}
+path <-"Supermarket_Sales_Dataset II.csv"
+
+sales <- read.transactions(path)
+sales
+```
+
+```{r}
+# Verifying the object's class
+# ---
+# This should show us transactions as the type of data that we will need
+# ---
+# 
+class(sales)
+```
+
+```{r}
+# Previewing our first 5 transactions
+#
+inspect(sales[1:5])
+```
+
+```{r}
+
+
+# Previewinf items that make up our dataset
+# 
+items<-as.data.frame(itemLabels(sales))
+colnames(items) <- "Item"
+head(items, 10)
+
+```
+
+```{r}
+# Generating a summary of the transaction dataset
+ 
+summary(Transactions)
+```
+
+```{r}
+par(mfrow = c(1, 2))
+# plot the frequency of items
+itemFrequencyPlot(sales, topN = 10,col="blue")
+```
+
+
+```{r}
+
+# Building a model based on association rules 
+# using the apriori function 
+# We use Min Support as 0.001 and confidence as 0.8
+# 
+rules <- apriori (sales, parameter = list(supp = 0.001, conf = 0.8))
+rules
+```
+
+```{r}
+# Building a apriori model with Min Support as 0.002 and confidence as 0.8.
+rules2 <- apriori (Transactions,parameter = list(supp = 0.002, conf = 0.8)) 
+
+# Building apriori model with Min Support as 0.002 and confidence as 0.6.
+rules3 <- apriori (Transactions, parameter = list(supp = 0.001, conf = 0.6)) 
+
+rules2
+
+rules3
+
+```
+
+
+```{r}
+# We can perform an exploration of our model 
+# through the use of the summary function as shown
+
+summary(rules)
+
+```
+
+```{r}
+# Observing rules built in our model 
+# ---
+# 
+inspect(rules[1:15])
+```
+
+```{r}
+
+# Ordering these rules by a criteria such as the level of confidence
+# then looking at the first five rules
+
+rules<-sort(rules, by="confidence", decreasing=TRUE)
+inspect(rules[1:5])
+```
+
+```{r}
+# If we're interested in making a promotion relating to the sale of yogurt, 
+# we could create a subset of rules concerning these products 
+# This would tell us the items that the customers bought before purchasing yogurt
+
+yogurt <- subset(rules, subset = rhs %pin% "yogurt")
+ 
+# Then order by confidence
+yogurt<-sort(yogurt, by="confidence", decreasing=TRUE)
+inspect(yogurt[1:5])
+
+```
+
+If someone buys cookies and low, they are 100% likely to buy yogurt too
+
+
+#  Part 4: Anomalies Detection
+
+```{r}
+# Installing anomalize package
+# 
+#install.packages("anomalize")
+library(tidyverse)
+library(anomalize)
+library(dplyr)
+library(lubridate)
+library(tibbletime)
+```
+
+```{r}
+# Loading the dataset
+forecasting<- read.csv('Supermarket_Sales_Forecasting - Sales.csv')
+head(forecasting)
+```
+
+```{r}
+# Collect our time series data
+tidyverse_cran_downloads
+```
+
+
+```{r}
+#converting the data frame to tibble
+
+forecast_tb <- as_tibble(forecasting)
+head(forecast_tb)
+```
+
+```{r}
+# install.packages("tibbletime")
+#install.packages("tsibble")
+library(tibbletime)
+library(tsibble) 
+library(lubridate)
+```
+
+```{r}
+forecast_tb <- forecast_tb %>%
+                    tibbletime::as_tbl_time(index = Date)
+```
+
+```{r}
+
+tidyverse_cran_downloads %>%
+    time_decompose(count) %>%
+    anomalize(remainder) %>%
+    time_recompose() %>%
+    plot_anomalies(time_recomposed = TRUE, ncol = 3, alpha_dots = 0.5)
+
+```
+
+
+
+

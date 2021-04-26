@@ -1,0 +1,240 @@
+---
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+
+# 1. Defining the question
+
+## 1.1 Specifying the data analytic objective
+
+Part 1: Dimensionality Reduction
+
+This section of the project entails reducing your dataset to a low dimensional dataset using the t-SNE algorithm or PCA. You will be required to perform your analysis and provide insights gained from your analysis.
+
+Part 2: Feature Selection
+
+This section requires you to perform feature selection through the use of the unsupervised learning methods learned earlier this week. You will be required to perform your analysis and provide insights on the features that contribute the most information to the dataset.
+
+
+## 1.2 Defining the metric of success
+
+Dataset with reduced dimensions.
+
+
+## 1.3 Understanding the context
+
+You are a Data analyst at Carrefour Kenya and are currently undertaking a project that will inform the marketing department on the most relevant marketing strategies that will result in the highest no. of sales (total price including tax). Your project has been divided into three parts where you'll explore a recent marketing dataset by performing various unsupervised learning techniques and later providing recommendations based on your insights.
+
+## 1.4 Recording the Experimental Design
+
+1. Loading the data
+2. Checking the data
+3. Tidying the data
+4. EDA
+5. Dimensionality Reduction
+6. Feature Selection
+
+```{r}
+# Installing packages
+#install.packages("dplyr")
+library(dplyr)
+#install.packages("tidyverse")
+library(tidyverse)
+#install.packages("ggplot2")
+library(ggplot2)
+#install.packages("devtools",dependencies=TRUE)
+library(devtools) 
+#install_github("vqv/ggbiplot") 
+library(ggbiplot)
+#install.packages("arules") 
+library(arules)
+#install.packages("arulesViz")
+library(arulesViz)
+#install.packages("Rtsne")
+library(Rtsne)
+#install.packages("caret")
+library(caret)
+#install.packages("corrplot")
+library(corrplot)
+```
+
+# 3. Loading the data
+
+```{r}
+# load the dataset
+df <- read_csv("Supermarket_Dataset_1 - Sales Data.csv")
+```
+
+
+```{r}
+spaceless <- function(x) {colnames(x) <- gsub(" ", "_", colnames(x));x}
+df <- spaceless(df)
+```
+
+
+```{r}
+#view the head
+
+head(df)
+```
+
+```{r}
+#structure of the dataset
+
+str(df)
+
+```
+
+
+```{r}
+#check the dimensions of the dataset
+dim(df)
+```
+
+
+```{r}
+#summary statistics
+summary(df)
+```
+
+```{r}
+
+# Concatenate the columns data and time
+ 
+df$Date_time = paste(df$Date,df$Time)
+
+# Converting the column into string
+df$Date_time = as.character(df$Date_time)
+
+```
+
+```{r}
+# converting the Date_time column data type to date time
+
+df$Date_time = strptime(df$Date_time, "%m/%d/%Y %M:%S")
+
+```
+
+```{r}
+# checking if the data type has been converted
+
+str(df$Date_time)
+```
+
+# 4. Data Cleaning
+
+```{r}
+
+# Checking for Missing Values
+
+colSums(is.na(df))
+
+```
+
+There are no missing values
+
+```{r}
+# Checking for duplicated data
+
+duplicates <- df[duplicated(df),]
+
+#duplicates
+
+anyDuplicated(df)
+```
+
+There are no duplicated data
+
+```{r}
+head(df)
+```
+
+```{r}
+# Plot a boxplot to help us visualise any existing outliers 
+numerical_col<-df[,  c(6, 7, 8, 12, 13, 14, 15, 16)]
+boxplot(numerical_col)
+```
+
+```{r}
+# Dropping unnecessary column 
+
+df <- df[,c(-1,-9,-10,-13)]
+head(df)
+```
+
+# 5. EDA
+
+## Univariate Analysis
+
+```{r}
+library(Hmisc)
+hist(numerical_col)
+```
+
+# Part 1: Dimensionality Reduction 
+
+## PCA
+
+
+```{r}
+# Selecting the numerical data 
+ 
+numericals <- df[,c(5,6,7,9,10,11,12)]
+head(numericals)
+```
+
+```{r}
+
+# We then pass df to the prcomp(). We also set two arguments, center and scale, 
+# to be TRUE then preview our object with summary
+# ---
+# 
+df.pca <- prcomp(df[,c(5,6,7,9:12)], center = TRUE, scale. = TRUE)
+summary(df.pca)
+```
+
+```{r}
+plot(df.pca, type="l")
+```
+
+# Part 2: Feature Selection
+
+```{r}
+
+# Calculating the correlation matrix
+# ---
+#
+correlationMatrix <- cor(numericals)
+```
+
+```{r}
+
+# Find attributes that are highly correlated
+# ---
+#
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.75)
+```
+
+```{r}
+# Highly correlated attributes
+# ---
+# 
+highlyCorrelated
+
+names(numericals[,highlyCorrelated])
+```
+
+```{r}
+# Removing Redundant Features 
+# ---
+# 
+drop <-numericals[-highlyCorrelated]
+```
+
+
+
+
+
